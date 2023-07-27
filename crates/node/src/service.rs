@@ -635,6 +635,8 @@ where
 			_inherents: &InherentData,
 			_proof: Self::Proof,
 		) -> Result<(), Error> {
+			let seal = CompatibleDigestItem::aura_seal(mp_digest_log::MADARA_ENGINE_ID);
+			params.post_digests.push(seal);
 			Ok(())
 		}
 	}
