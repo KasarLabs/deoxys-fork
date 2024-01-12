@@ -18,13 +18,41 @@
 
 # 👽 Deoxys: Starknet full node client on Substrate
 
-## ⚙️ Installation
+Deoxys is a Starknet *full node* client implementation using rust and leveraging the power of substrate and its community.
 
-## 📸 Snapshots
+## ⚙️ Getting started
 
-## ✔ Supported Features
+> ⚠️ We strongly recommend you use [nix](https://nixos.org/download) to set up your development environment.
+
+### Setup with Nix
+
+You will need to have [nix](https://nixos.org/download) installed on your system for this step, with [nix flakes](https://nixos.wiki/wiki/Flakes) enabled as an experimental feature. 
+Then, simply run the following command inside the cloned repository:
+
+```sh
+nix develop
+```
+
+This will open a new shell session with all the required dependencies. Note that this is not a containerized environment, and local changes to files will persist.
+
+### Manual setup
+
+Make sure to have the following packages installed on your system:
+```sh
+openssl pkgconfig protobuf clang rocksdb alsa
+```
+
+You will also need to have [rust](https://www.rust-lang.org/) configured locally.
+
+## 🧪 Testing
+
+> ⚠️ Testing will require you both compile and run a test node locally. Make sure to have at least 300GB available to store the entirety of the Starknet blockchain history. **This will take time, so do it as soon as possible**.
+
+Testing is done using the [ditto](https://github.com/KasarLabs/ditto) unit testing framework. Refer to that repository's documentation for further information
 
 ## 👍 Contribute
+
+You are welcome to propose your help for contributions via [onlydust](https://app.onlydust.com/p/deoxys). Contributions will only be accepted via pull request through forks of this repository. Any pull request should be formatted using `cargo fmt` and linted with `cargo clippy` and *will be checked* during integration tests.
 
 ## 🤝 Partnerships
 
