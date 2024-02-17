@@ -114,6 +114,8 @@ impl<T: Config> Pallet<T> {
                     match transaction {
                         // There is no way to validate it before the account is actuallly deployed
                         UserTransaction::DeployAccount(_) => Ok(None),
+                        UserTransaction::Deploy(_) => Ok(None), // TODO : Verify this (an account can do a
+                        // DeployTransaction without being declared first?)
                         UserTransaction::Declare(tx, contract_class) => tx
                             .try_into_executable::<T::SystemHash>(chain_id, contract_class.clone(), false)
                             .map_err(|_| InvalidTransaction::BadProof)?

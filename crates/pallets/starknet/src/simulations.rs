@@ -186,6 +186,13 @@ impl<T: Config> Pallet<T> {
                             log::error!("Failed to reexecute a tx: {}", e);
                             PlaceHolderErrorTypeForFailedStarknetExecution
                         }),
+                    UserTransaction::Deploy(tx) => tx
+                        .into_executable::<T::SystemHash>(chain_id, false)
+                        .execute(&mut BlockifierStateAdapter::<T>::default(), &block_context, &execution_config)
+                        .map_err(|e| {
+                            log::error!("Failed to reexecute a tx: {}", e);
+                            PlaceHolderErrorTypeForFailedStarknetExecution
+                        }),
                     UserTransaction::Invoke(tx) => tx
                         .into_executable::<T::SystemHash>(chain_id, false)
                         .execute(&mut BlockifierStateAdapter::<T>::default(), &block_context, &execution_config)
@@ -220,6 +227,10 @@ impl<T: Config> Pallet<T> {
                 )
             }
             UserTransaction::DeployAccount(tx) => {
+                let executable = tx.into_executable::<T::SystemHash>(chain_id, tx.offset_version());
+                executable.execute(&mut BlockifierStateAdapter::<T>::default(), block_context, execution_config)
+            }
+            UserTransaction::Deploy(tx) => {
                 let executable = tx.into_executable::<T::SystemHash>(chain_id, tx.offset_version());
                 executable.execute(&mut BlockifierStateAdapter::<T>::default(), block_context, execution_config)
             }

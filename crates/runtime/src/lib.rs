@@ -406,6 +406,9 @@ impl_runtime_apis! {
                 UserTransaction::DeployAccount(tx) => {
                     pallet_starknet::Call::deploy_account { transaction: tx  }
                 }
+                UserTransaction::Deploy(tx) => {
+                    pallet_starknet::Call::deploy { transaction: tx  }
+                }
                 UserTransaction::Invoke(tx) => {
                     pallet_starknet::Call::invoke { transaction: tx  }
                 }

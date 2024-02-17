@@ -445,6 +445,7 @@ impl ComputeTransactionHash for UserTransaction {
         match self {
             UserTransaction::Declare(tx, _) => tx.compute_hash::<H>(chain_id, offset_version, None),
             UserTransaction::DeployAccount(tx) => tx.compute_hash::<H>(chain_id, offset_version, None),
+            UserTransaction::Deploy(tx) => tx.compute_hash::<H>(chain_id, offset_version, None),
             UserTransaction::Invoke(tx) => tx.compute_hash::<H>(chain_id, offset_version, None),
         }
     }

@@ -20,7 +20,8 @@ use blockifier::transaction::objects::{
 use blockifier::transaction::transaction_types::TransactionType;
 use blockifier::transaction::transaction_utils::{update_remaining_gas, verify_no_calls_to_other_contracts};
 use blockifier::transaction::transactions::{
-    DeclareTransaction, DeployAccountTransaction, Executable, InvokeTransaction, L1HandlerTransaction,
+    DeclareTransaction, DeployAccountTransaction, DeployTransaction, Executable, InvokeTransaction,
+    L1HandlerTransaction,
 };
 use mp_fee::{calculate_tx_fee, charge_fee, compute_transaction_resources};
 use mp_felt::Felt252Wrapper;
@@ -127,6 +128,24 @@ impl GetAccountTransactionContext for DeployAccountTransaction {
     }
 }
 
+impl GetAccountTransactionContext for DeployTransaction {
+    fn get_account_transaction_context(&self, offset_version: bool) -> AccountTransactionContext {
+        let mut version = self.tx.version;
+        if offset_version {
+            version = version.apply_simulate_tx_version_offset();
+        }
+
+        AccountTransactionContext {
+            transaction_hash: self.tx_hash,
+            max_fee: Fee::default(),
+            version,
+            signature: TransactionSignature::default(),
+            nonce: Nonce::default(),
+            sender_address: self.contract_address,
+        }
+    }
+}
+
 impl GetAccountTransactionContext for InvokeTransaction {
     fn get_account_transaction_context(&self, offset_version: bool) -> AccountTransactionContext {
         let mut version = match self.tx {
@@ -186,6 +205,16 @@ impl GetTransactionCalldata for DeclareTransaction {
     }
 }
 
+impl GetTransactionCalldata for DeployTransaction {
+    fn calldata(&self) -> Calldata {
+        let mut validate_calldata = Vec::with_capacity((*self.tx.constructor_calldata.0).len() + 2);
+        validate_calldata.push(self.tx.class_hash.0);
+        validate_calldata.push(self.tx.contract_address_salt.0);
+        validate_calldata.extend_from_slice(&(self.tx.constructor_calldata.0));
+        Calldata(validate_calldata.into())
+    }
+}
+
 impl GetTransactionCalldata for DeployAccountTransaction {
     fn calldata(&self) -> Calldata {
         let mut validate_calldata = Vec::with_capacity((*self.tx.constructor_calldata.0).len() + 2);
@@ -220,6 +249,11 @@ impl GetTxType for DeclareTransaction {
 impl GetTxType for DeployAccountTransaction {
     fn tx_type() -> TransactionType {
         TransactionType::DeployAccount
+    }
+}
+impl GetTxType for DeployTransaction {
+    fn tx_type() -> TransactionType {
+        TransactionType::Deploy
     }
 }
 impl GetTxType for InvokeTransaction {
@@ -552,6 +586,39 @@ impl Validate for DeployAccountTransaction {
 }
 
 impl Execute for DeployAccountTransaction {
+    fn execute_inner<S: State + StateChanges>(
+        &self,
+        state: &mut S,
+        block_context: &BlockContext,
+        resources: &mut ExecutionResources,
+        remaining_gas: &mut u64,
+        account_tx_context: &AccountTransactionContext,
+        disable_validation: bool,
+    ) -> TransactionExecutionResult<ValidateExecuteCallInfo> {
+        let mut context = EntryPointExecutionContext::new(
+            block_context.clone(),
+            account_tx_context.clone(),
+            block_context.invoke_tx_max_n_steps,
+        );
+
+        // In order to be verified the tx must first be executed
+        // so that the `constructor` method can initialize the account state
+        let execute_call_info = self.run_execute(state, resources, &mut context, remaining_gas)?;
+        let validate_call_info = if !disable_validation {
+            self.validate_tx_inner(state, resources, remaining_gas, &mut context, self.calldata())?
+        } else {
+            None
+        };
+
+        Ok(ValidateExecuteCallInfo::new_accepted(validate_call_info, execute_call_info))
+    }
+}
+
+impl Validate for DeployTransaction {
+    const VALIDATE_TX_ENTRY_POINT_NAME: &'static str = VALIDATE_DEPLOY_ENTRY_POINT_NAME;
+}
+
+impl Execute for DeployTransaction {
     fn execute_inner<S: State + StateChanges>(
         &self,
         state: &mut S,

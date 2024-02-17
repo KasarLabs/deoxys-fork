@@ -923,7 +923,7 @@ dependencies = [
 [[package]]
 name = "blockifier"
 version = "0.1.0-rc2"
-source = "git+https://github.com/massalabs/blockifier?branch=no_std-support-7578442-std#acd23a1fcc2ccdb73093350c6a139c2bd29ca276"
+source = "git+https://github.com/Tbelleng/blockifier?branch=no_std-support-7578442#9594f3598b21f59dff115c97e28b8628fee123b6"
 dependencies = [
  "ark-ff",
  "ark-secp256k1",
