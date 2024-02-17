@@ -85,8 +85,8 @@ use mp_sequencer_address::{InherentError, InherentType, DEFAULT_SEQUENCER_ADDRES
 use mp_storage::{StarknetStorageSchemaVersion, PALLET_STARKNET_SCHEMA};
 use mp_transactions::execution::Execute;
 use mp_transactions::{
-    DeclareTransaction, DeployAccountTransaction, HandleL1MessageTransaction, InvokeTransaction, Transaction,
-    UserOrL1HandlerTransaction, UserTransaction, DeployTransaction,
+    DeclareTransaction, DeployAccountTransaction, DeployTransaction, HandleL1MessageTransaction, InvokeTransaction,
+    Transaction, UserOrL1HandlerTransaction, UserTransaction,
 };
 use sp_runtime::traits::UniqueSaturatedInto;
 use sp_runtime::DigestItem;
@@ -727,8 +727,6 @@ pub mod pallet {
             Ok(())
         }
 
-        
-        
         /// Consume a message from L1.
         ///
         /// # Arguments
@@ -751,33 +749,33 @@ pub mod pallet {
         ) -> DispatchResult {
             // This ensures that the function can only be called via unsigned transaction.
             ensure_none(origin)?;
-            
+
             let input_transaction = transaction;
             let chain_id = Self::chain_id();
             let transaction = input_transaction.into_executable::<T::SystemHash>(chain_id, paid_fee_on_l1, false);
-            
+
             let nonce: Nonce = transaction.tx.nonce;
-            
+
             // Ensure that L1 Message has not been executed
             Self::ensure_l1_message_not_executed(&nonce).map_err(|_| Error::<T>::L1MessageAlreadyExecuted)?;
-            
+
             // Store infornamtion about message being processed
             // The next instruction executes the message
             // Either successfully  or not
             L1Messages::<T>::mutate(|nonces| nonces.insert(nonce));
-            
+
             // Execute
             let tx_execution_infos = transaction
-            .execute(
-                &mut BlockifierStateAdapter::<T>::default(),
-                &Self::get_block_context(),
-                &RuntimeExecutionConfigBuilder::new::<T>().build(),
-            )
-            .map_err(|e| {
-                log::error!("Failed to consume l1 message: {}", e);
-                Error::<T>::TransactionExecutionFailed
-            })?;
-            
+                .execute(
+                    &mut BlockifierStateAdapter::<T>::default(),
+                    &Self::get_block_context(),
+                    &RuntimeExecutionConfigBuilder::new::<T>().build(),
+                )
+                .map_err(|e| {
+                    log::error!("Failed to consume l1 message: {}", e);
+                    Error::<T>::TransactionExecutionFailed
+                })?;
+
             let tx_hash = transaction.tx_hash;
             Self::emit_and_store_tx_and_fees_events(
                 tx_hash,
@@ -789,10 +787,10 @@ pub mod pallet {
                 Transaction::L1Handler(input_transaction),
                 tx_execution_infos.revert_error,
             );
-            
+
             Ok(())
         }
-        
+
         /// DeployTransaction, type of transaction used before Starknet v0.10.1.
         /// Before you can calculate the transaction hash, get the deployed contract address.
         /// # Arguments
@@ -808,17 +806,17 @@ pub mod pallet {
         pub fn deploy(origin: OriginFor<T>, transaction: DeployTransaction) -> DispatchResult {
             // This ensures that the function can only be called via unsigned transaction.
             ensure_none(origin)?;
-    
+
             let input_transaction = transaction;
             let chain_id = T::ChainId::get();
             let transaction = input_transaction.into_executable::<T::SystemHash>(chain_id, false);
-    
+
             // Check if contract is deployed
             ensure!(
                 !ContractClassHashes::<T>::contains_key(transaction.contract_address),
                 Error::<T>::AccountAlreadyDeployed
             );
-    
+
             // Execute
             let tx_execution_infos = transaction
                 .execute(
@@ -830,7 +828,7 @@ pub mod pallet {
                     log::error!("failed to deploy transaction: {:?}", e);
                     Error::<T>::TransactionExecutionFailed
                 })?;
-    
+
             let tx_hash = transaction.tx_hash;
             Self::emit_and_store_tx_and_fees_events(
                 tx_hash,
@@ -838,11 +836,11 @@ pub mod pallet {
                 &tx_execution_infos.fee_transfer_call_info,
             );
             Self::store_transaction(tx_hash, Transaction::Deploy(input_transaction), tx_execution_infos.revert_error);
-    
+
             Ok(())
         }
     }
-    
+
     #[pallet::inherent]
     impl<T: Config> ProvideInherent for Pallet<T> {
         type Call = Call<T>;

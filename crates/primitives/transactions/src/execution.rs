@@ -20,7 +20,8 @@ use blockifier::transaction::objects::{
 use blockifier::transaction::transaction_types::TransactionType;
 use blockifier::transaction::transaction_utils::{update_remaining_gas, verify_no_calls_to_other_contracts};
 use blockifier::transaction::transactions::{
-    DeclareTransaction, DeployTransaction, DeployAccountTransaction, Executable, InvokeTransaction, L1HandlerTransaction,
+    DeclareTransaction, DeployAccountTransaction, DeployTransaction, Executable, InvokeTransaction,
+    L1HandlerTransaction,
 };
 use mp_fee::{calculate_tx_fee, charge_fee, compute_transaction_resources};
 use mp_felt::Felt252Wrapper;

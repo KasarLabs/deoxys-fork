@@ -445,7 +445,8 @@ fn tx_execution_infos_to_tx_trace<B: BlockT>(
             // TODO(#1291): Compute state diff correctly
             state_diff: None,
         }),
-        TxType::Deploy => todo!(), //TODO: Implement this using Starknet-rs old commits (becareful, Receipt version exist but here we need a trace)
+        TxType::Deploy => todo!(), /* TODO: Implement this using Starknet-rs old commits (becareful, Receipt version
+                                     * exist but here we need a trace) */
         TxType::DeployAccount => {
             TransactionTrace::DeployAccount(DeployAccountTransactionTrace {
                 validate_invocation,

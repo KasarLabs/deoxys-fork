@@ -13,8 +13,8 @@ use starknet_api::transaction::{Fee, TransactionVersion};
 
 use super::compute_hash::ComputeTransactionHash;
 use super::{
-    DeclareTransaction, DeclareTransactionV0, DeclareTransactionV1, DeclareTransactionV2, DeployAccountTransaction, DeployTransaction,
-    HandleL1MessageTransaction, InvokeTransaction, InvokeTransactionV0, InvokeTransactionV1,
+    DeclareTransaction, DeclareTransactionV0, DeclareTransactionV1, DeclareTransactionV2, DeployAccountTransaction,
+    DeployTransaction, HandleL1MessageTransaction, InvokeTransaction, InvokeTransactionV0, InvokeTransactionV1,
 };
 
 impl DeclareTransactionV0 {
@@ -218,11 +218,12 @@ impl DeployTransaction {
         offset_version: bool,
     ) -> btx::DeployTransaction {
         let account_address = self.get_account_address();
-        let transaction_hash: Felt252Wrapper =
-            self.compute_hash_given_contract_address::<H>(chain_id.into(), account_address, offset_version, None).into();
+        let transaction_hash: Felt252Wrapper = self
+            .compute_hash_given_contract_address::<H>(chain_id.into(), account_address, offset_version, None)
+            .into();
         let contract_address: Felt252Wrapper = account_address.into();
-        //let transaction_hash = self.compute_hash::<H>(chain_id, offset_version, None);
-    
+        // let transaction_hash = self.compute_hash::<H>(chain_id, offset_version, None);
+
         btx::DeployTransaction {
             tx: sttx::DeployTransaction {
                 version: sttx::TransactionVersion(StarkFelt::from(1u128)),
@@ -234,7 +235,7 @@ impl DeployTransaction {
             contract_address: contract_address.into(),
         }
     }
-    
+
     pub fn from_starknet(inner: starknet_api::transaction::DeployTransaction) -> Self {
         Self {
             class_hash: inner.class_hash.into(),
