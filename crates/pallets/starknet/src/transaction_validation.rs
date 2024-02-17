@@ -110,23 +110,20 @@ impl<T: Config> Pallet<T> {
 
         match transaction {
             UserOrL1HandlerTransaction::User(transaction) => {
-                let validation_result = match transaction {
-                    // There is no way to validate it before the account is actuallly deployed
-                    UserTransaction::DeployAccount(_) => Ok(None),
-                    UserTransaction::Deploy(_) => Ok(None), /* TODO : Verify this (an account can do a
-                                                              * DeployTransaction without being declared first?) */
-                    UserTransaction::Declare(tx, contract_class) => tx
-                        .try_into_executable::<T::SystemHash>(chain_id, contract_class.clone(), false)
-                        .map_err(|_| InvalidTransaction::BadProof)?
-                        .validate_tx(&mut state, &block_context, &mut execution_resources, &mut initial_gas, false),
-                    UserTransaction::Invoke(tx) => tx.into_executable::<T::SystemHash>(chain_id, false).validate_tx(
-                        &mut state,
-                        &block_context,
-                        &mut execution_resources,
-                        &mut initial_gas,
-                        false,
-                    ),
-                };
+                let validation_result =
+                    match transaction {
+                        // There is no way to validate it before the account is actuallly deployed
+                        UserTransaction::DeployAccount(_) => Ok(None),
+                        UserTransaction::Deploy(_) => Ok(None), // TODO : Verify this (an account can do a
+                        // DeployTransaction without being declared first?)
+                        UserTransaction::Declare(tx, contract_class) => tx
+                            .try_into_executable::<T::SystemHash>(chain_id, contract_class.clone(), false)
+                            .map_err(|_| InvalidTransaction::BadProof)?
+                            .validate_tx(&mut state, &block_context, &mut execution_resources, &mut initial_gas, false),
+                        UserTransaction::Invoke(tx) => tx
+                            .into_executable::<T::SystemHash>(chain_id, false)
+                            .validate_tx(&mut state, &block_context, &mut execution_resources, &mut initial_gas, false),
+                    };
 
                 if let Err(TransactionExecutionError::ValidateTransactionError(
                     EntryPointExecutionError::PreExecutionError(PreExecutionError::UninitializedStorageAddress(
