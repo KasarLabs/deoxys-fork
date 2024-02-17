@@ -72,6 +72,8 @@ pub enum TxType {
     Invoke,
     /// Declare transaction.
     Declare,
+    /// Deploy transaction.
+    Deploy,
     /// Deploy account transaction.
     DeployAccount,
     /// Message sent from ethereum.
@@ -84,6 +86,7 @@ impl From<TxType> for TransactionType {
             TxType::Invoke => TransactionType::InvokeFunction,
             TxType::Declare => TransactionType::Declare,
             TxType::DeployAccount => TransactionType::DeployAccount,
+            TxType::Deploy => TransactionType::Deploy,
             TxType::L1Handler => TransactionType::L1Handler,
         }
     }
@@ -94,6 +97,7 @@ impl From<&UserTransaction> for TxType {
         match value {
             UserTransaction::Declare(_, _) => TxType::Declare,
             UserTransaction::DeployAccount(_) => TxType::DeployAccount,
+            UserTransaction::Deploy(_) => TxType::DeployAccount,
             UserTransaction::Invoke(_) => TxType::Invoke,
         }
     }
@@ -114,6 +118,7 @@ impl From<&UserOrL1HandlerTransaction> for TxType {
 pub enum UserTransaction {
     Declare(DeclareTransaction, ContractClass),
     DeployAccount(DeployAccountTransaction),
+    Deploy(DeployTransaction),
     Invoke(InvokeTransaction),
 }
 
@@ -231,7 +236,6 @@ pub struct DeployAccountTransaction {
 pub struct DeployTransaction {
     pub version: TransactionVersion,
     pub class_hash: Felt252Wrapper,
-    pub contract_address: Felt252Wrapper,
     pub contract_address_salt: Felt252Wrapper,
     pub constructor_calldata: Vec<Felt252Wrapper>,
 }

@@ -25,14 +25,18 @@ impl UserTransaction {
         match self {
             UserTransaction::Declare(tx, _) => *tx.sender_address(),
             UserTransaction::DeployAccount(tx) => tx.account_address(),
+            UserTransaction::Deploy(tx) => tx.account_address(),
             UserTransaction::Invoke(tx) => *tx.sender_address(),
         }
     }
 
     pub fn signature(&self) -> &Vec<Felt252Wrapper> {
+        static DEPLOY_VEC: Vec<Felt252Wrapper> = Vec::new();
+
         match self {
             UserTransaction::Declare(tx, _) => tx.signature(),
             UserTransaction::DeployAccount(tx) => tx.signature(),
+            UserTransaction::Deploy(_tx) => &DEPLOY_VEC,
             UserTransaction::Invoke(tx) => tx.signature(),
         }
     }
@@ -41,6 +45,7 @@ impl UserTransaction {
         match self {
             UserTransaction::Declare(tx, _) => tx.max_fee(),
             UserTransaction::DeployAccount(tx) => tx.max_fee(),
+            UserTransaction::Deploy(_tx) => &0,
             UserTransaction::Invoke(tx) => tx.max_fee(),
         }
     }
@@ -49,6 +54,7 @@ impl UserTransaction {
         match self {
             UserTransaction::Declare(..) => None,
             UserTransaction::DeployAccount(tx) => Some(tx.calldata()),
+            UserTransaction::Deploy(tx) => Some(tx.calldata()),
             UserTransaction::Invoke(tx) => Some(tx.calldata()),
         }
     }
@@ -57,6 +63,7 @@ impl UserTransaction {
         match self {
             UserTransaction::Declare(tx, _) => Some(tx.nonce()),
             UserTransaction::DeployAccount(tx) => Some(tx.nonce()),
+            UserTransaction::Deploy(_tx) => Some(&Felt252Wrapper::ZERO),
             UserTransaction::Invoke(tx) => tx.nonce(),
         }
     }
@@ -65,6 +72,7 @@ impl UserTransaction {
         match self {
             UserTransaction::Declare(tx, _) => tx.offset_version(),
             UserTransaction::DeployAccount(tx) => tx.offset_version(),
+            UserTransaction::Deploy(_tx) => false,
             UserTransaction::Invoke(tx) => tx.offset_version(),
         }
     }
@@ -175,6 +183,10 @@ impl DeployTransaction {
     pub fn class_hash(&self) -> &Felt252Wrapper {
         &self.class_hash
     }
+
+    pub fn offset_version(&self) -> bool {
+        false
+    }
 }
 
 impl InvokeTransaction {
@@ -232,6 +244,7 @@ impl TransactionVersion for UserTransaction {
         match self {
             UserTransaction::Declare(tx, _) => tx.version(),
             UserTransaction::DeployAccount(tx) => tx.version(),
+            UserTransaction::Deploy(tx) => tx.version(),
             UserTransaction::Invoke(tx) => tx.version(),
         }
     }

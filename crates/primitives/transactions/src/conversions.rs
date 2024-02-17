@@ -13,7 +13,7 @@ use starknet_api::transaction::{Fee, TransactionVersion};
 
 use super::compute_hash::ComputeTransactionHash;
 use super::{
-    DeclareTransaction, DeclareTransactionV0, DeclareTransactionV1, DeclareTransactionV2, DeployAccountTransaction,
+    DeclareTransaction, DeclareTransactionV0, DeclareTransactionV1, DeclareTransactionV2, DeployAccountTransaction, DeployTransaction,
     HandleL1MessageTransaction, InvokeTransaction, InvokeTransactionV0, InvokeTransactionV1,
 };
 
@@ -207,6 +207,40 @@ impl InvokeTransaction {
         match self {
             InvokeTransaction::V0(tx) => tx.into_executable::<H>(chain_id, offset_version),
             InvokeTransaction::V1(tx) => tx.into_executable::<H>(chain_id, offset_version),
+        }
+    }
+}
+
+impl DeployTransaction {
+    pub fn into_executable<H: HasherT>(
+        &self,
+        chain_id: Felt252Wrapper,
+        offset_version: bool,
+    ) -> btx::DeployTransaction {
+        let account_address = self.get_account_address();
+        let transaction_hash: Felt252Wrapper =
+            self.compute_hash_given_contract_address::<H>(chain_id.into(), account_address, offset_version, None).into();
+        let contract_address: Felt252Wrapper = account_address.into();
+        //let transaction_hash = self.compute_hash::<H>(chain_id, offset_version, None);
+    
+        btx::DeployTransaction {
+            tx: sttx::DeployTransaction {
+                version: sttx::TransactionVersion(StarkFelt::from(1u128)),
+                class_hash: self.class_hash.into(),
+                contract_address_salt: self.contract_address_salt.into(),
+                constructor_calldata: vec_of_felt_to_calldata(&self.constructor_calldata),
+            },
+            tx_hash: transaction_hash.into(),
+            contract_address: contract_address.into(),
+        }
+    }
+    
+    pub fn from_starknet(inner: starknet_api::transaction::DeployTransaction) -> Self {
+        Self {
+            class_hash: inner.class_hash.into(),
+            version: inner.version.into(),
+            contract_address_salt: inner.contract_address_salt.into(),
+            constructor_calldata: inner.constructor_calldata.0.iter().map(|felt| Felt252Wrapper::from(*felt)).collect(),
         }
     }
 }
